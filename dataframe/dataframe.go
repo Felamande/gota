@@ -551,8 +551,11 @@ func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, new
 	}
 
 	//corresponde to the order of newCols
+	newColWithGroupedCol := make([]string, len(gps.colnames))
+	copy(newColWithGroupedCol, gps.colnames)
+	newColWithGroupedCol = append(newColWithGroupedCol, newCols...)
 	dataSeries := []series.Series{}
-	for _, newColName := range newCols {
+	for _, newColName := range newColWithGroupedCol {
 		curData := []interface{}{}
 		for _, curMap := range dfMaps {
 			curData = append(curData, curMap[newColName])
