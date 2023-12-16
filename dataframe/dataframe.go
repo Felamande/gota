@@ -463,37 +463,37 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string, newCols
 	for i, typ := range typs {
 		switch typ {
 		case Aggregation_MAX:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.Max()
-			})
+			}
 		case Aggregation_MEAN:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.Mean()
-			})
+			}
 		case Aggregation_MEDIAN:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.Median()
-			})
+			}
 		case Aggregation_MIN:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.Min()
-			})
+			}
 		case Aggregation_STD:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.StdDev()
-			})
+			}
 		case Aggregation_SUM:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.Sum()
-			})
+			}
 		case Aggregation_COUNT:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.Len()
-			})
+			}
 		case Aggregation_DISTINCT_COUNT:
-			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+			fns[i] = func(curSeries series.Series) (value interface{}) {
 				return curSeries.DistictLen()
-			})
+			}
 		default:
 			return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
 		}
