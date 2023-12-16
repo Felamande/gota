@@ -527,6 +527,58 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 	return gps.aggregation
 }
 
+type AggregationFn func(series.Series) (value interface{})
+
+func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, newCol []string) DataFrame {
+	if gps.groups == nil {
+		return DataFrame{Err: fmt.Errorf("Aggregation: input is nil")}
+	}
+	if len(fns) != len(colnames) {
+		return DataFrame{Err: fmt.Errorf("Aggregation: len(fns) != len(colanmes)")}
+	}
+	if len(newCol) != len(colnames) {
+		return DataFrame{Err: fmt.Errorf("Aggregation: len(newCol) != len(colanmes)")}
+	}
+	dfMaps := make([]map[string]interface{}, 0)
+	for _, df := range gps.groups {
+		targetMap := df.Maps()[0]
+		curMap := make(map[string]interface{})
+		// add columns of  group by
+		for _, c := range gps.colnames {
+			if value, ok := targetMap[c]; ok {
+				curMap[c] = value
+			} else {
+				return DataFrame{Err: fmt.Errorf("Aggregation: can't find column name: %s", c)}
+			}
+		}
+		// Aggregation
+		for i, c := range colnames {
+			curSeries := df.Col(c)
+			value := fns[i](curSeries)
+			curMap[newCol[i]] = value
+		}
+		dfMaps = append(dfMaps, curMap)
+	}
+
+	// Save column types
+	colTypes := map[string]series.Type{}
+	for k := range dfMaps[0] {
+		switch dfMaps[0][k].(type) {
+		case string:
+			colTypes[k] = series.String
+		case int, int16, int32, int64:
+			colTypes[k] = series.Int
+		case float32, float64:
+			colTypes[k] = series.Float
+		default:
+			continue
+		}
+	}
+
+	gps.aggregation = LoadMaps(dfMaps, WithTypes(colTypes))
+	return gps.aggregation
+}
+
 // GetGroups returns the grouped data frames created by GroupBy
 func (g Groups) GetGroups() map[string]DataFrame {
 	return g.groups
