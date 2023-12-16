@@ -459,74 +459,47 @@ type Groups struct {
 
 // Aggregation :Aggregate dataframe by aggregation type and aggregation column name
 func (gps Groups) Aggregation(typs []AggregationType, colnames []string, newCols []string) DataFrame {
-	if gps.groups == nil {
-		return DataFrame{Err: fmt.Errorf("Aggregation: input is nil")}
-	}
-	if len(typs) != len(colnames) {
-		return DataFrame{Err: fmt.Errorf("Aggregation: len(typs) != len(colanmes)")}
-	}
-	if len(newCols) != len(colnames) {
-		return DataFrame{Err: fmt.Errorf("Aggregation: len(typs) != len(colanmes)")}
-	}
-	dfMaps := make([]map[string]interface{}, 0)
-	for _, df := range gps.groups {
-		targetMap := df.Maps()[0]
-		curMap := make(map[string]interface{})
-		// add columns of  group by
-		for _, c := range gps.colnames {
-			if value, ok := targetMap[c]; ok {
-				curMap[c] = value
-			} else {
-				return DataFrame{Err: fmt.Errorf("Aggregation: can't find column name: %s", c)}
-			}
-		}
-		// Aggregation
-		for i, c := range colnames {
-			curSeries := df.Col(c)
-			var value interface{}
-			switch typs[i] {
-			case Aggregation_MAX:
-				value = curSeries.Max()
-			case Aggregation_MEAN:
-				value = curSeries.Mean()
-			case Aggregation_MEDIAN:
-				value = curSeries.Median()
-			case Aggregation_MIN:
-				value = curSeries.Min()
-			case Aggregation_STD:
-				value = curSeries.StdDev()
-			case Aggregation_SUM:
-				value = curSeries.Sum()
-			case Aggregation_COUNT:
-				value = curSeries.Len()
-			case Aggregation_DISTINCT_COUNT:
-				value = curSeries.DistictLen()
-			default:
-				return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
-			}
-			curMap[newCols[i]] = value
-		}
-		dfMaps = append(dfMaps, curMap)
-
-	}
-
-	// Save column types
-	colTypes := map[string]series.Type{}
-	for k := range dfMaps[0] {
-		switch dfMaps[0][k].(type) {
-		case string:
-			colTypes[k] = series.String
-		case int, int16, int32, int64:
-			colTypes[k] = series.Int
-		case float32, float64:
-			colTypes[k] = series.Float
+	fns := make([]AggregationFn, len(typs))
+	for i, typ := range typs {
+		switch typ {
+		case Aggregation_MAX:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.Max()
+			})
+		case Aggregation_MEAN:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.Mean()
+			})
+		case Aggregation_MEDIAN:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.Median()
+			})
+		case Aggregation_MIN:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.Min()
+			})
+		case Aggregation_STD:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.StdDev()
+			})
+		case Aggregation_SUM:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.Sum()
+			})
+		case Aggregation_COUNT:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.Len()
+			})
+		case Aggregation_DISTINCT_COUNT:
+			fns = append(fns, func(curSeries series.Series) (value interface{}) {
+				return curSeries.DistictLen()
+			})
 		default:
-			continue
+			return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
 		}
 	}
+	return gps.AggregationFnApply(fns, colnames, newCols)
 
-	gps.aggregation = LoadMaps(dfMaps, WithTypes(colTypes))
-	return gps.aggregation
 }
 
 type AggregationFn func(series.Series) (value interface{})
