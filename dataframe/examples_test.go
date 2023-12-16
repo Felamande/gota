@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-gota/gota/dataframe"
-	"github.com/go-gota/gota/series"
+	"github.com/Felamande/gota/dataframe"
+	"github.com/Felamande/gota/series"
 )
 
 func ExampleNew() {
