@@ -123,11 +123,11 @@ const (
 // Indexes represent the elements that can be used for selecting a subset of
 // elements within a Series. Currently supported are:
 //
-//     int            // Matches the given index number
-//     []int          // Matches all given index numbers
-//     []bool         // Matches all elements in a Series marked as true
-//     Series [Int]   // Same as []int
-//     Series [Bool]  // Same as []bool
+//	int            // Matches the given index number
+//	[]int          // Matches all given index numbers
+//	[]bool         // Matches all elements in a Series marked as true
+//	Series [Int]   // Same as []int
+//	Series [Bool]  // Same as []bool
 type Indexes interface{}
 
 // New is the generic Series constructor
@@ -560,6 +560,14 @@ func (s Series) Type() Type {
 // Len returns the length of a given Series
 func (s Series) Len() int {
 	return s.elements.Len()
+}
+
+func (s Series) DistictLen() int {
+	distinctMap := map[string]bool{}
+	for i := 0; i < s.elements.Len(); i++ {
+		distinctMap[s.elements.Elem(i).String()] = true
+	}
+	return len(distinctMap)
 }
 
 // String implements the Stringer interface for Series
