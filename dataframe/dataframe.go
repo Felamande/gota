@@ -458,11 +458,14 @@ type Groups struct {
 }
 
 // Aggregation :Aggregate dataframe by aggregation type and aggregation column name
-func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFrame {
+func (gps Groups) Aggregation(typs []AggregationType, colnames []string, newCols []string) DataFrame {
 	if gps.groups == nil {
 		return DataFrame{Err: fmt.Errorf("Aggregation: input is nil")}
 	}
 	if len(typs) != len(colnames) {
+		return DataFrame{Err: fmt.Errorf("Aggregation: len(typs) != len(colanmes)")}
+	}
+	if len(newCols) != len(colnames) {
 		return DataFrame{Err: fmt.Errorf("Aggregation: len(typs) != len(colanmes)")}
 	}
 	dfMaps := make([]map[string]interface{}, 0)
@@ -500,9 +503,8 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 				value = curSeries.DistictLen()
 			default:
 				return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
-
 			}
-			curMap[fmt.Sprintf("%s_%s", c, typs[i])] = value
+			curMap[newCols[i]] = value
 		}
 		dfMaps = append(dfMaps, curMap)
 
