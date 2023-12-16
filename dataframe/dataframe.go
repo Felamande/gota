@@ -531,14 +531,14 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string, newCols
 
 type AggregationFn func(series.Series) (value interface{})
 
-func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, newCol []string) DataFrame {
+func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, newCols []string) DataFrame {
 	if gps.groups == nil {
 		return DataFrame{Err: fmt.Errorf("Aggregation: input is nil")}
 	}
 	if len(fns) != len(colnames) {
 		return DataFrame{Err: fmt.Errorf("Aggregation: len(fns) != len(colanmes)")}
 	}
-	if len(newCol) != len(colnames) {
+	if len(newCols) != len(colnames) {
 		return DataFrame{Err: fmt.Errorf("Aggregation: len(newCol) != len(colanmes)")}
 	}
 	dfMaps := make([]map[string]interface{}, 0)
@@ -557,7 +557,7 @@ func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, new
 		for i, c := range colnames {
 			curSeries := df.Col(c)
 			value := fns[i](curSeries)
-			curMap[newCol[i]] = value
+			curMap[newCols[i]] = value
 		}
 		dfMaps = append(dfMaps, curMap)
 	}
@@ -577,7 +577,17 @@ func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, new
 		}
 	}
 
-	gps.aggregation = LoadMaps(dfMaps, WithTypes(colTypes))
+	//corresponde to the order of newCols
+	dataSeries := []series.Series{}
+	for _, newColName := range newCols {
+		curData := []interface{}{}
+		for _, curMap := range dfMaps {
+			curData = append(curData, curMap[newColName])
+		}
+		dataSeries = append(dataSeries, series.New(curData, colTypes[newColName], newColName))
+	}
+
+	gps.aggregation = New(dataSeries...)
 	return gps.aggregation
 }
 
