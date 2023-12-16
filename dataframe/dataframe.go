@@ -1346,7 +1346,6 @@ func LoadMaps(maps []map[string]interface{}, options ...LoadOption) DataFrame {
 			}
 		}
 	}
-	sort.Strings(colnames)
 	records := make([][]string, len(maps)+1)
 	records[0] = colnames
 	for k, m := range maps {
