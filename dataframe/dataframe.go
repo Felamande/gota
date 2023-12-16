@@ -2135,6 +2135,20 @@ func (df DataFrame) Records() [][]string {
 	return records
 }
 
+func (df DataFrame) Data() [][]interface{} {
+	var records [][]interface{}
+	records = append(records, toIface(df.Names()))
+	if df.ncols == 0 || df.nrows == 0 {
+		return records
+	}
+	var tRecords [][]interface{}
+	for _, col := range df.columns {
+		tRecords = append(tRecords, col.Data())
+	}
+	records = append(records, transposeRecords(tRecords)...)
+	return records
+}
+
 // Maps return the array of maps representation of a DataFrame.
 func (df DataFrame) Maps() []map[string]interface{} {
 	maps := make([]map[string]interface{}, df.nrows)
@@ -2324,21 +2338,29 @@ func findType(arr []string) (series.Type, error) {
 	}
 }
 
-func transposeRecords(x [][]string) [][]string {
+func transposeRecords[T any](x [][]T) [][]T {
 	n := len(x)
 	if n == 0 {
 		return x
 	}
 	m := len(x[0])
-	y := make([][]string, m)
+	y := make([][]T, m)
 	for i := 0; i < m; i++ {
-		z := make([]string, n)
+		z := make([]T, n)
 		for j := 0; j < n; j++ {
 			z[j] = x[j][i]
 		}
 		y[i] = z
 	}
 	return y
+}
+
+func toIface[T any](origin []T) []interface{} {
+	ret := make([]interface{}, len(origin))
+	for i, v := range origin {
+		ret[i] = interface{}(v)
+	}
+	return ret
 }
 
 func inIntSlice(i int, is []int) bool {

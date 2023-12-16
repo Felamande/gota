@@ -510,6 +510,15 @@ func (s Series) Records() []string {
 	return ret
 }
 
+func (s Series) Data() []interface{} {
+	ret := make([]interface{}, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		ret[i] = e.Val()
+	}
+	return ret
+}
+
 // Float returns the elements of a Series as a []float64. If the elements can not
 // be converted to float64 or contains a NaN returns the float representation of
 // NaN.
