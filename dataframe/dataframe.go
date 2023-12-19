@@ -514,6 +514,11 @@ func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, new
 	if len(newCols) != len(colnames) {
 		return DataFrame{Err: fmt.Errorf("Aggregation: len(newCol) != len(colanmes)")}
 	}
+
+	if len(gps.groups) == 0 {
+		return DataFrame{Err: fmt.Errorf("empty groups found")}
+	}
+
 	dfMaps := make([]map[string]interface{}, 0)
 	for _, df := range gps.groups {
 		targetMap := df.Maps()[0]
@@ -537,6 +542,7 @@ func (gps Groups) AggregationFnApply(fns []AggregationFn, colnames []string, new
 
 	// Save column types
 	colTypes := map[string]series.Type{}
+
 	for k := range dfMaps[0] {
 		switch dfMaps[0][k].(type) {
 		case string:
